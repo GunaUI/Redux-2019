@@ -102,7 +102,8 @@ const mapStateToProps = state => {
     // We have to sent current state to the reducer as payload value, this reducers don't have access to global variables...
     onStoreResult: (result) => dispatch({type: actionTypes.STORE_RESULT, result: result})
 ```
-* Refer : Types of state in Refer-Pdf folder... regarding when and where we have to user redux state and when to avaoid
+* Refer : Types of state in Refer-Pdf folder... regarding when and where we have to user redux state and when to avoid
+* Next refer redux assignment.
 
 
 
