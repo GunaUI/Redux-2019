@@ -1,24 +1,18 @@
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
 
-## Outsourcing the action type
+## Combining the multiple reducers
+* How to combine multiple reducers into single reducer...
+* Let us split reducer.js into two seperate reducers one for counter reducer and another one for results reducer.
+* store/reducers/counter.js
 
-* Here we are going to outsource action type as constant.
-* Inside store create a file actions.js
 ```jsx
-export const INCREMENT = 'INCREMENT';
-export const DECREMENT = 'DECREMENT';
-export const ADD = 'ADD';
-export const SUBTRACT = 'SUBTRACT';
-export const STORE_RESULT = 'STORE_RESULT';
-export const DELETE_RESULT = 'DELETE_RESULT';
-```
-* now we can import this action constant in our reducer.js file
-```jsx
-// here * represent import everything...
-import * as actionTypes from './actions';
+import * as actionTypes from '../actions';
 
-//Replace hard coded string , Now we can use action types from actions file.
-const reducer = (state = initialState, action) => {
+const initialState = {
+    counter: 0
+};
+
+const reducer = ( state = initialState, action ) => {
     switch ( action.type ) {
         case actionTypes.INCREMENT:
             const newState = Object.assign({}, state);
@@ -39,15 +33,29 @@ const reducer = (state = initialState, action) => {
                 ...state,
                 counter: state.counter - action.value
             }
+    }
+    return state;
+};
+
+export default reducer;
+```
+* store/reducers/result.js
+```jsx
+import * as actionTypes from '../actions';
+
+const initialState = {
+    results: []
+};
+
+const reducer = ( state = initialState, action ) => {
+    switch ( action.type ) {
         case actionTypes.STORE_RESULT:
             return {
                 ...state,
-                results: state.results.concat({value: state.counter,id: new Date()})
+                results: state.results.concat({id: new Date(), value: action.result})
             }
         case actionTypes.DELETE_RESULT:
-            const updatedArray = state.results.filter((result,index) =>{
-                return result.id !== action.resultElId
-            });
+            const updatedArray = state.results.filter(result => result.id !== action.resultElId);
             return {
                 ...state,
                 results: updatedArray
@@ -55,21 +63,46 @@ const reducer = (state = initialState, action) => {
     }
     return state;
 };
-```
-* Same hard-coded string in couter.js also can be replaced from constant this will avoid typo error.
 
+export default reducer;
+```
+
+* Combine above two reducers into one ...
 ```jsx
-const mapDispatchToProps = dispatch => {
+//We need to import combineReducers with createStore from redux
+import { createStore , combineReducers} from 'redux';
+
+import counterReducer from './store/reducers/counter';
+import resultReducer from './store/reducers/result';
+
+// Then we have to combine above two reducers into one with combineReducers
+// here ctr and res is the global variable it can be accessed in component and containers, this global variable can't be accessed inside reducer.
+const rootReducer = combineReducers({
+    ctr: counterReducer,
+    res: resultReducer
+});
+
+const store = createStore(rootReducer);
+
+ReactDOM.render(<Provider store={store}><App /></Provider>, document.getElementById('root'));
+```
+
+* Change the corresponding global variable changes in other files too... to access the reducer values..
+```jsx
+const mapStateToProps = state => {
     return {
-        onIncrementCounter: () => dispatch({type: actionTypes.INCREMENT}),
-        onDecrementCounter: () => dispatch({type: actionTypes.DECREMENT}),
-        onIncrementConstCounter: () => dispatch({type: actionTypes.ADD,value: 5}),
-        onDecrementConstCounter: () => dispatch({type: actionTypes.SUBTRACT,value: 5}),
-        onStoreResult: (result) => dispatch({type: actionTypes.STORE_RESULT, result: result}),
-        onDeleteResult: (id) => dispatch({type: actionTypes.DELETE_RESULT, resultElId: id})
+        storedCtr: state.ctr.counter,
+        storedResults: state.res.results
     };
 };
 ```
+
+* Note:
+```jsx
+    // We have to sent current state to the reducer as payload value, this reducers don't have access to global variables...
+    onStoreResult: (result) => dispatch({type: actionTypes.STORE_RESULT, result: result})
+```
+* Refer : Types of state in Refer-Pdf folder... regarding when and where we have to user redux state and when to avaoid
 
 
 
